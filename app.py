@@ -17,24 +17,22 @@ st.set_page_config(
 if 'theme' not in st.session_state:
     st.session_state.theme = 'dark' # K7EL BY DEFAULT
 
-# === BUTTON DYAL THEME LFO9 F RAAS L-PAGE ===
+# === BUTTON DYAL THEME LFO9 ===
 col_title, col_btn = st.columns([5, 1])
 with col_title:
-    st.write("") # Khawi bach y7fed space
+    st.write("")
 with col_btn:
     if st.button("🎨 Bdl Lown", use_container_width=True, help="Bdl bin K7el w Byad"):
         st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
 
-# === CSS DYNAMIQUE: TOGGLE K7EL/BYAD ===
+# === CSS DYNAMIQUE ===
 if st.session_state.theme == 'light':
-    # MODE BYAD
     bg_color = "#FFFFFF"
     card_color = "#F0F2F6"
     text_color = "#262730"
     plotly_template = "plotly_white"
     gauge_color = "#1f77b4"
 else:
-    # MODE K7EL - DEFAULT
     bg_color = "#0E1117"
     card_color = "#1E1E1E"
     text_color = "#FAFAFA"
@@ -46,7 +44,6 @@ st.markdown(f"""
 .main {{background-color: {bg_color};}}
 .stMetric {{background-color: {card_color}; padding: 15px; border-radius: 10px; border: 1px solid {gauge_color}40;}}
    h1, h2, h3, p, label {{color: {text_color}!important;}}
- .stDataFrame {{background-color: {card_color};}}
 .stButton>button {{background-color: {card_color}; color: {text_color}; border: 1px solid {gauge_color};}}
     </style>
     """, unsafe_allow_html=True)
@@ -56,7 +53,7 @@ st.markdown(f"<h1 style='text-align: center; color: {gauge_color};'>⚙️ Plate
 st.markdown(f"<p style='text-align: center; color: {text_color};'>PFE 2026 - Ingénierie Industrielle | Données Live via IoT</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# === SIDEBAR - INFO GHIR ===
+# === SIDEBAR ===
 with st.sidebar:
     st.image("https://img.icons8.com/3d-fluency/94/maintenance.png", width=100)
     st.title("Panel Info")
@@ -112,18 +109,19 @@ try:
         col_g1, col_g2 = st.columns([1,2])
         with col_g1:
             fig_gauge = go.Figure(go.Indicator(
-                mode = "gauge+number+delta",
-                value = sante,
-                title = {'text': "Indice de Santé", 'font': {'size': 20, 'color': text_color}},
-                delta = {'reference': 90},
-                gauge = {
+                mode="gauge+number+delta",
+                value=sante,
+                title={'text': "Indice de Santé", 'font': {'size': 20, 'color': text_color}},
+                delta={'reference': 90},
+                gauge={
                     'axis': {'range': [0, 100], 'tickcolor': text_color},
                     'bar': {'color': gauge_color, 'thickness': 0.3},
                     'bgcolor': card_color,
                     'steps': [
                         {'range': [0, 30], 'color': "#FF4B4B"},
                         {'range': [30, 70], 'color': "#FECB52"},
-                        {'range': [70, 100], 'color': "#2ECC71"}],
+                        {'range': [70, 100], 'color': "#2ECC71"}
+                    ],
                     'threshold': {'line': {'color': "red", 'width': 4}, 'value': 30}
                 }
             ))
@@ -131,13 +129,4 @@ try:
             st.plotly_chart(fig_gauge, use_container_width=True)
 
         with col_g2:
-            fig_rul = px.line(df, x='index', y='RUL', title='📉 Évolution RUL', template=plotly_template)
-            fig_rul.add_hline(y=48, line_dash="dash", line_color="red", annotation_text="Seuil Critique")
-            fig_rul.update_layout(height=350, paper_bgcolor=bg_color, plot_bgcolor=card_color)
-            st.plotly_chart(fig_rul, use_container_width=True)
-
-        col_g3, col_g4 = st.columns(2)
-        with col_g3:
-            fig_prob = px.area(df, x='index', y='prob_panne', title='📈 Probabilité de Panne',
-                              template=plotly_template, color_discrete_sequence=['#FF4B4B'])
-            fig_prob.update_layout(height=350,
+            fig_rul = px.line(df, x='index', y='RUL', title='📉 Évolution RUL', template=
