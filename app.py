@@ -44,8 +44,8 @@ else:
 
 st.markdown(f"""
     <style>
-  .main {{background-color: {bg_color};}}
-  .stMetric {{background-color: {card_color}; padding: 15px; border-radius: 10px;}}
+ .main {{background-color: {bg_color};}}
+ .stMetric {{background-color: {card_color}; padding: 15px; border-radius: 10px;}}
    h1, h2, h3, p {{color: {text_color}!important;}}
     </style>
     """, unsafe_allow_html=True)
@@ -104,8 +104,64 @@ try:
         col_g1, col_g2 = st.columns([1,2])
 
         with col_g1:
+            # === JAUGE CORRIGÉE ===
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number+delta",
                 value = sante,
                 domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text':
+                title = {'text': "Indice de Santé", 'font': {'size': 20, 'color': text_color}},
+                delta = {'reference': 90},
+                gauge = {
+                    'axis': {'range': [0, 100], 'tickcolor': text_color},
+                    'bar': {'color': gauge_color, 'thickness': 0.3},
+                    'bgcolor': card_color,
+                    'steps': [
+                        {'range': [0, 30], 'color': "#FF4B4B"},
+                        {'range': [30, 70], 'color': "#FECB52"},
+                        {'range': [70, 100], 'color': "#2ECC71"}],
+                    'threshold': {'line': {'color': "red", 'width': 4}, 'value': 30}
+                }
+            ))
+            fig_gauge.update_layout(height=350, paper_bgcolor=bg_color, font={'color': text_color})
+            st.plotly_chart(fig_gauge, use_container_width=True)
+
+        with col_g2:
+            fig_rul = px.line(df, x='index', y='RUL', title='📉 Évolution RUL', template=plotly_template)
+            fig_rul.add_hline(y=48, line_dash="dash", line_color="red", annotation_text="Seuil Critique 48h")
+            fig_rul.add_hline(y=100, line_dash="dash", line_color="orange", annotation_text="Seuil Attention 100h")
+            fig_rul.update_layout(height=350, paper_bgcolor=bg_color, plot_bgcolor=card_color)
+            st.plotly_chart(fig_rul, use_container_width=True)
+
+        # Ligne 2: Prob + Heatmap
+        col_g3, col_g4 = st.columns(2)
+        with col_g3:
+            fig_prob = px.area(df, x='index', y='prob_panne', title='📈 Probabilité de Panne',
+                              template=plotly_template, color_discrete_sequence=['#FF4B4B'])
+            fig_prob.update_layout(height=350, paper_bgcolor=bg_color, plot_bgcolor=card_color)
+            st.plotly_chart(fig_prob, use_container_width=True)
+
+        with col_g4:
+            fig_heat = px.imshow(df[required_cols].tail(50).T, title='🔥 Heatmap 50 Dernières Mesures',
+                                template=plotly_template, aspect="auto")
+            fig_heat.update_layout(height=350, paper_bgcolor=bg_color)
+            st.plotly_chart(fig_heat, use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("📋 Dernières 10 Mesures")
+        st.dataframe(df[required_cols + ['prob_panne', 'RUL']].tail(10).round(3), use_container_width=True, height=350)
+
+        # Alertes
+        if rul < 24:
+            st.error(f"🚨 ALERTE CRITIQUE N3: RUL = {rul:.1f}h. ARRÊT IMMÉDIAT RECOMMANDÉ sur {machine}!")
+        elif rul < 48:
+            st.error(f"⚠️ ALERTE CRITIQUE N2: RUL = {rul:.1f}h. Intervention < 24h sur {machine}!")
+        elif rul < 100:
+            st.warning(f"⚠️ ATTENTION N1: RUL = {rul:.1f}h. Planifier maintenance pour {machine}.")
+        else:
+            st.success(f"✅ {machine} en bon état. RUL = {rul:.1f}h. Santé: {sante:.0f}%")
+
+    else:
+        st.error("❌ Colonnes manquantes. Vérifiez: rms, peak, kurtosis, crest, fft_236hz")
+
+except Exception as e:
+    st.error(f"❌ Erreur: {e}")
