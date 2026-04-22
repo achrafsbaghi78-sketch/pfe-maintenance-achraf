@@ -15,7 +15,17 @@ st.sidebar.title("Panel de Contrôle")
 machine = st.sidebar.selectbox("🏭 Choisir Machine", ["Presse B2 - Roulement 1", "Moteur C3", "Pompe H1"])
 st.sidebar.success("✅ Déployé sur Streamlit Cloud")
 
-uploaded_file = st.file_uploader("📂 Uploader CSV: rms, peak, kurtosis, crest, fft_236hz", type=['csv'])
+# === KAY9RA DATA MN GOOGLE SHEETS BO7DO ===
+SHEET_ID = "1ABC_XYZ_123"  # GADI TBDEL HADI B ID DYALK
+url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
+
+try:
+    df = pd.read_csv(url)
+    st.success("✅ Data Live mn Google Sheets")
+    uploaded_file = True  # Bach code l9dim ykhdem
+except:
+    st.error("❌ Vérifier ID dyal Google Sheet w Public access")
+    st.stop()
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
