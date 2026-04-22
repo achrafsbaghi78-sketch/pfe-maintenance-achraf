@@ -5,7 +5,6 @@ import plotly.express as px
 from xgboost import XGBClassifier
 import numpy as np
 
-# === CONFIGURATION PAGE ===
 st.set_page_config(
     page_title="Smart Maintenance AI",
     layout="wide",
@@ -13,11 +12,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# === INITIALISER THEME STATE ===
 if 'theme' not in st.session_state:
     st.session_state.theme = 'dark'
 
-# === BUTTON DYAL THEME LFO9 ===
 col_title, col_btn = st.columns([5, 1])
 with col_title:
     st.write("")
@@ -25,7 +22,6 @@ with col_btn:
     if st.button("🎨 Bdl Lown", use_container_width=True):
         st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
 
-# === CSS DYNAMIQUE ===
 if st.session_state.theme == 'light':
     bg_color = "#FFFFFF"
     card_color = "#F0F2F6"
@@ -48,12 +44,10 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# === HEADER ===
 st.markdown(f"<h1 style='text-align: center; color: {gauge_color};'>⚙️ Plateforme AI de Maintenance Prédictive 4.0</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: {text_color};'>PFE 2026 - Ingénierie Industrielle | Données Live via IoT</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# === SIDEBAR ===
 with st.sidebar:
     st.image("https://img.icons8.com/3d-fluency/94/maintenance.png", width=100)
     st.title("Panel Info")
@@ -63,5 +57,120 @@ with st.sidebar:
     st.markdown("---")
     st.caption("Développé avec ❤️ par Achraf Sbaghi")
 
-# === LECTURE DATA ===
-SHEET_ID = "1nVJUGItidO-B4es
+# === HNA KAN LKHATA2 - SHEET_ID KAMLA DABA ===
+SHEET_ID = "1nVJUGItidO-B4esCa0DESygITF1o4YHEGj-rs1Et30A"
+url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
+
+try:
+    df = pd.read_csv(url)
+    required_cols = ['rms','peak','kurtosis','crest','fft_236hz']
+
+    if all(col in df.columns for col in required_cols):
+        for col in required_cols:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+        df = df.dropna(subset=required_cols)
+
+        if len(df) < 20:
+            st.warning(f"⚠️ 3ndek ghir {len(df)} mesure. Khass 20+")
+            st.stop()
+
+        with st.spinner('🤖 Analyse AI XGBoost...'):
+            seuil = int(0.85 * len(df))
+            df['label'] = (df.index > seuil).astype(int)
+            X = df[required_cols]
+            model = XGBClassifier(n_estimators=100, max_depth=5, random_state=42, eval_metric='logloss')
+            model.fit(X[:-20], df['label'][:-20])
+            df['prob_panne'] = model.predict_proba(X)[:,1] * 100
+            df['RUL'] = (len(df) - df.index) * 10 / 60
+            df['index'] = df.index
+
+        st.header(f"📈 Dashboard Temps Réel: {machine}")
+
+        col1, col2, col3, col4 = st.columns(4)
+        sante = 100 - df['prob_panne'].iloc[-1]
+        rul = df['RUL'].iloc[-1]
+        prob = df['prob_panne'].iloc[-1]
+        rms_actuel = df['rms'].iloc[-1]
+
+        col1.metric("💚 Santé Machine", f"{sante:.1f}%", f"{sante-90:.1f}%" if sante<90 else "Stable")
+        col2.metric("⏱️ RUL Estimé", f"{rul:.1f} h", f"-{df['RUL'].iloc[-2]-rul:.1f}h", delta_color="inverse")
+        col3.metric("🚨 Prob. Panne", f"{prob:.1f}%", f"+{prob-df['prob_panne'].iloc[-2]:.1f}%", delta_color="inverse")
+        col4.metric("📊 RMS Actuel", f"{rms_actuel:.3f}", f"{(rms_actuel-df['rms'].iloc[-2])/df['rms'].iloc[-2]*100:.1f}%")
+
+        st.markdown("---")
+
+        col_g1, col_g2 = st.columns([1,2])
+        with col_g1:
+            fig_gauge = go.Figure(go.Indicator(
+                mode="gauge+number+delta",
+                value=sante,
+                title={'text': "Indice de Santé", 'font': {'size': 20, 'color': text_color}},
+                delta={'reference': 90},
+                gauge={
+                    'axis': {'range': [0, 100], 'tickcolor': text_color},
+                    'bar': {'color': gauge_color, 'thickness': 0.3},
+                    'bgcolor': card_color,
+                    'steps': [
+                        {'range': [0, 30], 'color': "#FF4B4B"},
+                        {'range': [30, 70], 'color': "#FECB52"},
+                        {'range': [70, 100], 'color': "#2ECC71"}
+                    ],
+                    'threshold': {'line': {'color': "red", 'width': 4}, 'value': 30}
+                }
+            ))
+            fig_gauge.update_layout(height=350, paper_bgcolor=bg_color, font={'color': text_color})
+            st.plotly_chart(fig_gauge, use_container_width=True)
+
+        with col_g2:
+            fig_rul = px.line(
+                df,
+                x='index',
+                y='RUL',
+                title='📉 Évolution RUL',
+                template=plotly_template
+            )
+            fig_rul.add_hline(y=48, line_dash="dash", line_color="red", annotation_text="Seuil Critique")
+            fig_rul.update_layout(height=350, paper_bgcolor=bg_color, plot_bgcolor=card_color)
+            st.plotly_chart(fig_rul, use_container_width=True)
+
+        col_g3, col_g4 = st.columns(2)
+        with col_g3:
+            fig_prob = px.area(
+                df,
+                x='index',
+                y='prob_panne',
+                title='📈 Probabilité de Panne',
+                template=plotly_template,
+                color_discrete_sequence=['#FF4B4B']
+            )
+            fig_prob.update_layout(height=350, paper_bgcolor=bg_color, plot_bgcolor=card_color)
+            st.plotly_chart(fig_prob, use_container_width=True)
+
+        with col_g4:
+            fig_heat = px.imshow(
+                df[required_cols].tail(50).T,
+                title='🔥 Heatmap Features',
+                template=plotly_template,
+                aspect="auto"
+            )
+            fig_heat.update_layout(height=350, paper_bgcolor=bg_color)
+            st.plotly_chart(fig_heat, use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("📋 Dernières 10 Mesures")
+        st.dataframe(df[required_cols + ['prob_panne', 'RUL']].tail(10).round(3), use_container_width=True, height=350)
+
+        if rul < 24:
+            st.error(f"🚨 ALERTE CRITIQUE: RUL = {rul:.1f}h. ARRÊT IMMÉDIAT sur {machine}!")
+        elif rul < 48:
+            st.error(f"⚠️ ALERTE CRITIQUE: RUL = {rul:.1f}h. Intervention < 24h!")
+        elif rul < 100:
+            st.warning(f"⚠️ ATTENTION: RUL = {rul:.1f}h. Planifier maintenance.")
+        else:
+            st.success(f"✅ {machine} en bon état. RUL = {rul:.1f}h. Santé: {sante:.0f}%")
+
+    else:
+        st.error("❌ Colonnes manquantes. Vérifiez: rms, peak, kurtosis, crest, fft_236hz")
+
+except Exception as e:
+    st.error(f"❌ Erreur: {e}")
