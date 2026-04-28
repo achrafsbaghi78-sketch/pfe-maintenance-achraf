@@ -3,7 +3,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
-
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 st.set_page_config(page_title="SPC 4.0 Dashboard", layout="wide", page_icon="📊")
 
 # === PARAMETRES PROCEDE - Diamètre Axe Moteur ===
