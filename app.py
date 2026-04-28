@@ -144,7 +144,12 @@ try:
 
     if Cp >= 1.33 and Cpk >= 1.33:
         st.success(f"🏆 **PROCESSUS CAPABLE** - Cp={Cp:.2f} | Cpk={Cpk:.2f} | Conforme IATF 16949")
-
+if std_val > 0:
+    cp = ...
+    cpk = ...
+else:
+    cp = 0
+    cpk = 0
     # === TABLEAU ===
     st.markdown("---")
     st.subheader("📋 Données Brutes - 10 Derniers
