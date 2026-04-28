@@ -154,3 +154,25 @@ else:
     # === TABLEAU ===
     st.markdown("---")
     st.subheader("📋 Données Brutes - 10 Derniers
+# =========================
+# RAPPORT PDF
+# =========================
+st.markdown("---")
+st.subheader("📄 Rapport Qualité")
+
+if st.button("Générer le rapport PDF"):
+    pdf_path = generate_pdf_report()
+
+    with open(pdf_path, "rb") as f:
+        st.download_button(
+            label="📥 Télécharger le rapport PDF",
+            data=f,
+            file_name="rapport_qualite_specsense.pdf",
+            mime="application/pdf"
+        )
+
+# =========================
+# FOOTER
+# =========================
+st.markdown("---")
+st.caption("SpecSense AI V1.0 | Qualité 4.0 | Inspiré IATF 16949")
