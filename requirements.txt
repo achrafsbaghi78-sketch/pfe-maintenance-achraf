@@ -1,7 +1,6 @@
 streamlit
 pandas
-plotly
-xgboost
-scikit-learn
-reportlab
 numpy
+plotly
+huggingface_hub
+reportlab
